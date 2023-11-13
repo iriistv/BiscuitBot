@@ -1,0 +1,64 @@
+const Discord = require('discord.js');
+const emojis = require('../../data/emojis.json');
+
+module.exports = {
+    name: 'nuke',
+    //aliases: [''],
+    category: 'Modération',
+    description: 'Permet de supprimer le salon et de le recréer',
+    modération: true,
+    permission: ['SEND_MESSAGES', 'MANAGE_CHANNELS'],
+    usage: '',
+
+    run : async (client, message, args) => {
+
+        try {
+            if(!message.member.hasPermission('MANAGE_CHANNELS')) return message.channel.send(new Discord.MessageEmbed()
+            .setColor('#2f3136')
+            .setDescription(`${emojis.bc_cross} Vous n'avez pas la permission réquise (\`MANAGE_CHANNELS\`) pour effectuer cette commande.`)
+            .setFooter(`${client.user.username} © 2021`, client.user.displayAvatarURL({dynamic: true}))
+            .setTimestamp()
+            )
+
+            if(!message.guild.me.hasPermission('MANAGE_CHANNELS')) return message.channel.send(new Discord.MessageEmbed()
+            .setColor('#2f3136')
+            .setDescription(`${emojis.bc_cross} Je n'ai pas la permission réquise (\`MANAGE_CHANNELS\`) pour effectuer cette commande.`)
+            .setFooter(`${client.user.username} © 2021`, client.user.displayAvatarURL({dynamic: true}))
+            .setTimestamp()
+            )
+
+            const object = ['type', 'topic', 'nsfw', 'bitrate', 'userLimit', 'parent', 'permissionOverwrites', 'position', 'rateLimitPerUser'].reduce((o, p) => {
+                if(![ null, undefined ].includes(message.channel[p])) o[p] = message.channel[p];
+                return o;
+            }, {})
+            await message.channel.delete();
+
+            const createdChannel = await message.guild.channels.create(message.channel.name, object);
+            await createdChannel.setPosition(object.position);
+            await createdChannel.send(new Discord.MessageEmbed()
+            .setColor('#2f3136')
+            .setDescription(`${emojis.bc_check} Le salon a bien été **nuck**.`)
+            .setFooter(`${client.user.username} © 2021`, client.user.displayAvatarURL({dynamic: true}))
+            .setTimestamp()
+            )
+        } catch(err) {
+            client.users.cache.get('769577099618811935').send(new Discord.MessageEmbed()
+            .setColor('#2f3136')
+            .setAuthor(`${client.user.username}`, `${client.user.displayAvatarURL({dynamic: true})}`, 'https://discord.gg/zepjJrAgPx')
+            .setDescription(`Une erreur dans la commande \`nuke\` est survenue dans **${message.guild.name}**.`)
+            .addField(`__La voici:__`, `\`\`\`JS\n${err}\`\`\``)
+            .setFooter(`${client.user.username} © 2021`, client.user.displayAvatarURL({dynamic: true}))
+            .setTimestamp()
+            )
+
+            message.channel.send(new Discord.MessageEmbed()
+            .setColor('#2f3136')
+            .setAuthor(`Erreur`, `${client.user.displayAvatarURL({dynamic: true})}`, 'https://discord.gg/zepjJrAgPx')
+            .setDescription(`Une erreur vient d'apparaître, mon développeur a été averti.`)
+            .addField(`__La voici:__`, `\`\`\`JS\n${err}\`\`\``)
+            .setFooter(`${client.user.username} © 2021`, client.user.displayAvatarURL({dynamic: true}))
+            .setTimestamp()
+            )
+        }
+    }
+}
